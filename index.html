@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- Название сайта - Title -->
+    <title>Блокнот JS</title>
+        <!-- Подключение Шрифтов с Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+        <!-- Иконка Сайта - Favicon -->
+    <link rel="icon" href="bloknot.ico" type="image/x-icon">
+        <!-- Стили Блокнота - CSS -->
+    <style>
+        /* Определение цветовых переменных для легкой настройки */
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5f5f5;
+            --text-color: #333;
+            --delete-color: #e74c3c;
+        }
+
+        /* Сброс стандартных стилей и установка box-sizing */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Основные стили для body */
+        body {
+            font-family: 'Roboto', sans-serif; /* Используем Roboto как основной шрифт */
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--secondary-color);
+            padding: 20px;
+        }
+
+        /* Стили для основного контейнера */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        /* Стили для заголовка */
+        h1 {
+            font-family: 'Poppins', sans-serif; /* Используем Poppins для заголовка */
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            font-weight: 600;
+            font-size: 2.5rem;
+        }
+
+        /* Стили для контейнера ввода */
+        .input-container {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        /* Стили для поля ввода */
+        #task-input {
+            flex-grow: 1;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid var(--primary-color);
+            border-radius: 5px 0 0 5px;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        /* Стили для кнопки добавления задачи */
+        #add-task {
+            padding: 12px 24px;
+            font-size: 16px;
+            background-color: var(--primary-color);
+            color: #fff;
+            border: none;
+            border-radius: 0 5px 5px 0;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+        }
+
+        /* Эффект при наведении на кнопку добавления */
+        #add-task:hover {
+            background-color: #3a7bc8;
+        }
+
+        /* Стили для списка задач */
+        #task-list {
+            list-style-type: none;
+        }
+
+        /* Стили для элемента задачи */
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #fff;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Стили для текста задачи */
+        .task-text {
+            flex-grow: 1;
+        }
+
+        /* Стили для кнопки удаления задачи */
+        .delete-task {
+            background-color: var(--delete-color);
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+        }
+
+        /* Эффект при наведении на кнопку удаления */
+        .delete-task:hover {
+            background-color: #c0392b;
+        }
+
+        /* Медиа-запрос для адаптации на мобильных устройствах */
+        @media screen and (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+
+            #task-input, #add-task {
+                font-size: 14px;
+            }
+
+            .task-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .delete-task {
+                margin-top: 10px;
+                align-self: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Основной контейнер приложения -->
+    <div class="container">
+        <h1>Блокнот</h1>
+        <!-- Контейнер для ввода новой задачи -->
+        <div class="input-container">
+            <input type="text" id="task-input" placeholder="Введите новую задачу...">
+            <button id="add-task">Добавить</button>
+        </div>
+        <!-- Список задач -->
+        <ul id="task-list"></ul>
+        <center>
+            <p>Автор сайта: snike (Ylham Shadyyew)</p>
+            <p>Мой GitHub аккаунт: </p>
+        </center>
+    </div>
+
+    <script>
+        // Получение ссылок на элементы DOM
+        const taskInput = document.getElementById('task-input');
+        const addTaskButton = document.getElementById('add-task');
+        const taskList = document.getElementById('task-list');
+
+        // Загрузка сохраненных задач из localStorage или создание пустого массива
+        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+        // Функция для отображения задач
+        function renderTasks() {
+            taskList.innerHTML = '';
+            tasks.forEach((task, index) => {
+                const li = document.createElement('li');
+                li.className = 'task-item';
+                li.innerHTML = `
+                    <span class="task-text">${task}</span>
+                    <button class="delete-task" data-index="${index}">Удалить</button>
+                `;
+                taskList.appendChild(li);
+            });
+            saveTasks();
+        }
+
+        // Функция для добавления новой задачи
+        function addTask() {
+            const taskText = taskInput.value.trim();
+            if (taskText) {
+                tasks.push(taskText);
+                taskInput.value = '';
+                renderTasks();
+            }
+        }
+
+        // Функция для удаления задачи
+        function deleteTask(index) {
+            tasks.splice(index, 1);
+            renderTasks();
+        }
+
+        // Функция для сохранения задач в localStorage
+        function saveTasks() {
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        // Обработчик события для кнопки добавления задачи
+        addTaskButton.addEventListener('click', addTask);
+
+        // Обработчик события для добавления задачи по нажатию Enter
+        taskInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addTask();
+            }
+        });
+
+        // Обработчик события для удаления задачи
+        taskList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-task')) {
+                const index = e.target.getAttribute('data-index');
+                deleteTask(index);
+            }
+        });
+
+        // Начальное отображение задач при загрузке страницы
+        renderTasks();
+    </script>
+</body>
+</html>
